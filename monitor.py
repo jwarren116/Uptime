@@ -4,11 +4,19 @@ from time import sleep, time
 import requests
 import io
 import smtplib
-from smtp_config import sender, password, receivers, host, port, message
+from smtp_config import sender, password, receivers, host, port
 
 
 DELAY = 60  # Delay between site queries
 EMAIL_INTERVAL = 1800  # Delay between alert emails
+
+# Message template for alert
+message = """From: {sender}
+To: {receivers}
+Subject: Monitor Service Notification
+
+You are being notified that {SITE} is experiencing a {status} status!
+"""
 
 
 def monitor(SITE, email_time):
@@ -18,11 +26,18 @@ def monitor(SITE, email_time):
         # If more than EMAIL_INTERVAL seconds since last email, resend
         if (time() - email_time[SITE]) > EMAIL_INTERVAL:
             try:
-                smtpObj = smtplib.SMTP(host, port) # Set up SMTP object
+                smtpObj = smtplib.SMTP(host, port)  # Set up SMTP object
                 smtpObj.starttls()
                 smtpObj.login(sender, password)
-                smtpObj.sendmail(sender, receivers, message)
-                email_time[SITE] = time()
+                smtpObj.sendmail(sender,
+                                 receivers,
+                                 message.format(sender=sender,
+                                                receivers=receivers,
+                                                SITE=SITE,
+                                                status=resp.status_code
+                                                )
+                                 )
+                email_time[SITE] = time()  # Update time of last email
                 print "Successfully sent email"
             except smtplib.SMTPException:
                 print "Error sending email ({}:{})".format(host, port)

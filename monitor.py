@@ -6,25 +6,29 @@ import io
 import smtplib
 from smtp_config import sender, password, receivers, host, port, message
 
-SITES = io.open('sites.txt', mode='r').readlines()
-SITES = [site.strip() for site in SITES]
+# Read in sites to monitor
+SITES = [site.strip() for site in io.open('sites.txt', mode='r').readlines()]
+
+# Temporarily use single SITE until threading is set up
+SITE = SITES[0]
 
 DELAY = 60 # Delay between site queries
 EMAIL_INTERVAL = 1800 # Delay between alert emails
 
 time_email_sent = 0
 
-for SITE in SITES:
-    print "Beginning monitoring of {}".format(SITE)
+# for SITE in SITES:
+print "Beginning monitoring of {}".format(SITE)
 
 try:
     while True:
-        resp = requests.get(SITES[0])
+        resp = requests.get(SITE)
         if resp.status_code != 200:
-            print "{} status: {}".format(SITES[0], resp.status_code)
+            print "{} status: {}".format(SITE, resp.status_code)
+            # If more than EMAIL_INTERVAL seconds since last email, resend
             if (time() - time_email_sent) > EMAIL_INTERVAL:
                 try:
-                    smtpObj = smtplib.SMTP(host, port)
+                    smtpObj = smtplib.SMTP(host, port) # Set up SMTP object
                     smtpObj.starttls()
                     smtpObj.login(sender, password)
                     smtpObj.sendmail(sender, receivers, message)

@@ -10,11 +10,3 @@ port = 587
 
 # Recipients that will get alert
 receivers = ['john.doe@gmail.com']
-
-# Message template for alert
-message = """From: {}
-To: {}
-Subject: Monitor Service Notification
-
-Example notification text here!
-""".format(sender, receivers)

@@ -35,7 +35,7 @@ def monitor(SITE, email_time):
                 smtpObj.sendmail(sender,
                                  receivers,
                                  message.format(sender=sender,
-                                                receivers=receivers,
+                                                receivers=", ".join(receivers),
                                                 SITE=SITE,
                                                 status=resp.status_code
                                                 )

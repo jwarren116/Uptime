@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
-from time import sleep, time
+from time import sleep, time, strftime
 import requests
 import io
 import smtplib
@@ -22,7 +22,10 @@ You are being notified that {SITE} is experiencing a {status} status!
 def monitor(SITE, email_time):
     resp = requests.get(SITE)
     if resp.status_code != 200:
-        print "{} status: {}".format(SITE, resp.status_code)
+        print "({}) {} STATUS: {}".format(strftime("%a %b %d %Y %H:%M:%S"),
+                                          SITE,
+                                          resp.status_code
+                                          )
         # If more than EMAIL_INTERVAL seconds since last email, resend
         if (time() - email_time[SITE]) > EMAIL_INTERVAL:
             try:

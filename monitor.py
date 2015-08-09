@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
-from time import sleep, time
+from time import sleep, time, strftime
 import requests
 import io
 import smtplib
+import sys
 from smtp_config import sender, password, receivers, host, port
 
 
@@ -22,7 +23,10 @@ You are being notified that {SITE} is experiencing a {status} status!
 def monitor(SITE, email_time):
     resp = requests.get(SITE)
     if resp.status_code != 200:
-        print "{} status: {}".format(SITE, resp.status_code)
+        print "({}) {} STATUS: {}".format(strftime("%a %b %d %Y %H:%M:%S"),
+                                          SITE,
+                                          resp.status_code
+                                          )
         # If more than EMAIL_INTERVAL seconds since last email, resend
         if (time() - email_time[SITE]) > EMAIL_INTERVAL:
             try:
@@ -32,7 +36,7 @@ def monitor(SITE, email_time):
                 smtpObj.sendmail(sender,
                                  receivers,
                                  message.format(sender=sender,
-                                                receivers=receivers,
+                                                receivers=", ".join(receivers),
                                                 SITE=SITE,
                                                 status=resp.status_code
                                                 )
@@ -44,13 +48,20 @@ def monitor(SITE, email_time):
 
 
 if __name__ == '__main__':
-    # Read in sites to monitor
-    SITES = [site.strip() for site in io.open('sites.txt', mode='r').readlines()]
-    email_time = {}
+    # Accept sites from command line input
+    SITES = sys.argv[1:]
+
+    # Read in additional sites to monitor from sites.txt file
+    try:
+        SITES += [site.strip() for site in io.open('sites.txt', mode='r').readlines()]
+    except IOError:
+        print "No sites.txt file found"
+
+    email_time = {}  # Monitored sites and timestamp of last alert sent
 
     for SITE in SITES:
         print "Beginning monitoring of {}".format(SITE)
-        email_time[SITE] = 0
+        email_time[SITE] = 0  # Initialize timestamp as 0
 
     while True:
         try:

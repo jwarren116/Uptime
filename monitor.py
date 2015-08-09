@@ -4,6 +4,7 @@ from time import sleep, time, strftime
 import requests
 import io
 import smtplib
+import sys
 from smtp_config import sender, password, receivers, host, port
 
 
@@ -48,7 +49,8 @@ def monitor(SITE, email_time):
 
 if __name__ == '__main__':
     # Read in sites to monitor
-    SITES = [site.strip() for site in io.open('sites.txt', mode='r').readlines()]
+    # SITES = [site.strip() for site in io.open('sites.txt', mode='r').readlines()]
+    SITES = sys.argv[1:]
     email_time = {}
 
     for SITE in SITES:

@@ -48,14 +48,20 @@ def monitor(SITE, email_time):
 
 
 if __name__ == '__main__':
-    # Read in sites to monitor
-    # SITES = [site.strip() for site in io.open('sites.txt', mode='r').readlines()]
+    # Accept sites from command line input
     SITES = sys.argv[1:]
-    email_time = {}
+
+    # Read in additional sites to monitor from sites.txt file
+    try:
+        SITES += [site.strip() for site in io.open('sites.txt', mode='r').readlines()]
+    except IOError:
+        print "No sites.txt file found"
+
+    email_time = {}  # Monitored sites and timestamp of last alert sent
 
     for SITE in SITES:
         print "Beginning monitoring of {}".format(SITE)
-        email_time[SITE] = 0
+        email_time[SITE] = 0  # Initialize timestamp as 0
 
     while True:
         try:

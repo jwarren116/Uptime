@@ -11,6 +11,13 @@ from smtp_config import sender, password, receivers, host, port
 DELAY = 60  # Delay between site queries
 EMAIL_INTERVAL = 1800  # Delay between alert emails
 
+# Define escape sequences for colored terminal output
+GREEN = "\033[92m"
+RED = "\033[91m"
+YELLOW = "\033[93m"
+BOLD = "\033[1m"
+END = "\033[0m"
+
 # Message template for alert
 message = """From: {sender}
 To: {receivers}
@@ -22,11 +29,16 @@ You are being notified that {SITE} is experiencing a {status} status!
 
 def monitor(SITE, email_time):
     resp = requests.get(SITE)
-    if resp.status_code != 200:
-        print "({}) {} STATUS: {}".format(strftime("%a %b %d %Y %H:%M:%S"),
-                                          SITE,
-                                          resp.status_code
-                                          )
+    if resp.status_code == 200:
+        print "\b" + GREEN + "." + END,
+        sys.stdout.flush()
+    else:
+        print "\n({}) {} {}STATUS: {}{}".format(strftime("%a %b %d %Y %H:%M:%S"),
+                                                SITE,
+                                                YELLOW,
+                                                resp.status_code,
+                                                END
+                                                )
         # If more than EMAIL_INTERVAL seconds since last email, resend
         if (time() - email_time[SITE]) > EMAIL_INTERVAL:
             try:
@@ -42,9 +54,9 @@ def monitor(SITE, email_time):
                                                 )
                                  )
                 email_time[SITE] = time()  # Update time of last email
-                print "Successfully sent email"
+                print GREEN + "Successfully sent email" + END
             except smtplib.SMTPException:
-                print "Error sending email ({}:{})".format(host, port)
+                print RED + "Error sending email ({}:{})".format(host, port) + END
 
 
 if __name__ == '__main__':
@@ -55,12 +67,12 @@ if __name__ == '__main__':
     try:
         SITES += [site.strip() for site in io.open('sites.txt', mode='r').readlines()]
     except IOError:
-        print "No sites.txt file found"
+        print RED + "No sites.txt file found" + END
 
     email_time = {}  # Monitored sites and timestamp of last alert sent
 
     for SITE in SITES:
-        print "Beginning monitoring of {}".format(SITE)
+        print BOLD + "Beginning monitoring of {}".format(SITE) + END
         email_time[SITE] = 0  # Initialize timestamp as 0
 
     while True:
@@ -69,5 +81,5 @@ if __name__ == '__main__':
                 monitor(SITE, email_time)
             sleep(DELAY)
         except KeyboardInterrupt:
-            print "\n-- Monitoring canceled --"
+            print RED + "\n-- Monitoring canceled --" + END
             break

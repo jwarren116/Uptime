@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
 from time import sleep, time, strftime
+from requests.exceptions import MissingSchema
 import requests
 import io
 import smtplib
@@ -69,6 +70,14 @@ if __name__ == '__main__':
     except IOError:
         print RED + "No sites.txt file found" + END
 
+    # Add protocol if missing in URL
+    for SITE in range(len(SITES)):
+        if SITES[SITE][:7] != "http://" and SITES[SITE][:8] != "https://":
+            SITES[SITE] = "http://" + SITES[SITE]
+
+    # Eliminate exact duplicates in SITES
+    SITES = list(set(SITES))
+
     for SITE in SITES:
         print BOLD + "Beginning monitoring of {}".format(SITE) + END
         email_time[SITE] = 0  # Initialize timestamp as 0
@@ -77,6 +86,10 @@ if __name__ == '__main__':
         try:
             for SITE in SITES:
                 monitor(SITE, email_time)
+            sleep(DELAY)
+        except MissingSchema:
+            SITE = "http://" + SITE
+            monitor(SITE, email_time)
             sleep(DELAY)
         except KeyboardInterrupt:
             print RED + "\n-- Monitoring canceled --" + END

@@ -12,3 +12,5 @@ The monitor.py script is configured to send alert emails when a non-200 status i
 
 ## Running
 The monitor.py script runs from the command line, optionally taking one or more websites as arguments(ex: `python monitor.py http://www.github.com http://www.google.com`). The script then reads in the optional `sites.txt` file containing additional sites (one per line).
+
+When initialized, the script will output all sites to be monitored to the terminal. The script will ping each address every 60 seconds (unless otherwise configured via the `DELAY` variable found in `monitor.py`). Each ping returning a 200 status will output a green `.` to the terminal. If the address returns a status other than 200, an email will be sent using the configured SMTP settings found in `smtp_config.py` and an alert with time, address and status will be printed to the terminal. A maximum of one email per site will be sent every 30 minutes, unless otherwise configured via `EMAIL_INTERVAL` found in `monitor.py`.

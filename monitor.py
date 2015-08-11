@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
 from time import sleep, time, strftime
+from requests.exceptions import MissingSchema
 import requests
 import io
 import smtplib
@@ -10,6 +11,13 @@ from smtp_config import sender, password, receivers, host, port
 
 DELAY = 60  # Delay between site queries
 EMAIL_INTERVAL = 1800  # Delay between alert emails
+
+# Define escape sequences for colored terminal output
+GREEN = "\033[92m"
+RED = "\033[91m"
+YELLOW = "\033[93m"
+BOLD = "\033[1m"
+END = "\033[0m"
 
 # Message template for alert
 message = """From: {sender}
@@ -22,11 +30,16 @@ You are being notified that {SITE} is experiencing a {status} status!
 
 def monitor(SITE, email_time):
     resp = requests.get(SITE)
-    if resp.status_code != 200:
-        print "({}) {} STATUS: {}".format(strftime("%a %b %d %Y %H:%M:%S"),
-                                          SITE,
-                                          resp.status_code
-                                          )
+    if resp.status_code == 200:
+        print "\b" + GREEN + "." + END,
+        sys.stdout.flush()
+    else:
+        print "\n({}) {} {}STATUS: {}{}".format(strftime("%a %b %d %Y %H:%M:%S"),
+                                                SITE,
+                                                YELLOW,
+                                                resp.status_code,
+                                                END
+                                                )
         # If more than EMAIL_INTERVAL seconds since last email, resend
         if (time() - email_time[SITE]) > EMAIL_INTERVAL:
             try:
@@ -42,32 +55,42 @@ def monitor(SITE, email_time):
                                                 )
                                  )
                 email_time[SITE] = time()  # Update time of last email
-                print "Successfully sent email"
+                print GREEN + "Successfully sent email" + END
             except smtplib.SMTPException:
-                print "Error sending email ({}:{})".format(host, port)
+                print RED + "Error sending email ({}:{})".format(host, port) + END
 
 
 if __name__ == '__main__':
-    # Accept sites from command line input
-    SITES = sys.argv[1:]
+    SITES = sys.argv[1:]  # Accept sites from command line input
+    email_time = {}  # Monitored sites and timestamp of last alert sent
 
     # Read in additional sites to monitor from sites.txt file
     try:
         SITES += [site.strip() for site in io.open('sites.txt', mode='r').readlines()]
     except IOError:
-        print "No sites.txt file found"
+        print RED + "No sites.txt file found" + END
 
-    email_time = {}  # Monitored sites and timestamp of last alert sent
+    # Add protocol if missing in URL
+    for SITE in range(len(SITES)):
+        if SITES[SITE][:7] != "http://" and SITES[SITE][:8] != "https://":
+            SITES[SITE] = "http://" + SITES[SITE]
+
+    # Eliminate exact duplicates in SITES
+    SITES = list(set(SITES))
 
     for SITE in SITES:
-        print "Beginning monitoring of {}".format(SITE)
+        print BOLD + "Beginning monitoring of {}".format(SITE) + END
         email_time[SITE] = 0  # Initialize timestamp as 0
 
-    while True:
+    while SITES:
         try:
             for SITE in SITES:
                 monitor(SITE, email_time)
             sleep(DELAY)
+        except MissingSchema:
+            SITE = "http://" + SITE
+            monitor(SITE, email_time)
+            sleep(DELAY)
         except KeyboardInterrupt:
-            print "\n-- Monitoring canceled --"
+            print RED + "\n-- Monitoring canceled --" + END
             break

@@ -40,6 +40,12 @@ def monitor(SITE, email_time):
                                                 resp.status_code,
                                                 END
                                                 )
+        log = io.open('monitor.log', mode='a')
+        log.write("({}) {} STATUS: {}\n".format(strftime("%a %b %d %Y %H:%M:%S"),
+                                                SITE,
+                                                resp.status_code,
+                                                )
+                  )
         # If more than EMAIL_INTERVAL seconds since last email, resend
         if (time() - email_time[SITE]) > EMAIL_INTERVAL:
             try:
@@ -94,3 +100,5 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             print RED + "\n-- Monitoring canceled --" + END
             break
+    else:
+        print YELLOW + "No site(s) input to monitor!" + END

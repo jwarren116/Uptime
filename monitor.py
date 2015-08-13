@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
 from time import sleep, time, strftime
-from requests.exceptions import MissingSchema
 import requests
 import io
 import smtplib
@@ -28,18 +27,20 @@ You are being notified that {SITE} is experiencing a {status} status!
 """
 
 
-def monitor(SITE, email_time):
+def main(SITE, email_time):
     resp = requests.get(SITE)
     if resp.status_code == 200:
         print "\b" + GREEN + "." + END,
         sys.stdout.flush()
     else:
+        # Print colored status message to terminal
         print "\n({}) {} {}STATUS: {}{}".format(strftime("%a %b %d %Y %H:%M:%S"),
                                                 SITE,
                                                 YELLOW,
                                                 resp.status_code,
                                                 END
                                                 )
+        # Log status message to log file
         log = io.open('monitor.log', mode='a')
         log.write("({}) {} STATUS: {}\n".format(strftime("%a %b %d %Y %H:%M:%S"),
                                                 SITE,
@@ -91,11 +92,7 @@ if __name__ == '__main__':
     while SITES:
         try:
             for SITE in SITES:
-                monitor(SITE, email_time)
-            sleep(DELAY)
-        except MissingSchema:
-            SITE = "http://" + SITE
-            monitor(SITE, email_time)
+                main(SITE, email_time)
             sleep(DELAY)
         except KeyboardInterrupt:
             print RED + "\n-- Monitoring canceled --" + END

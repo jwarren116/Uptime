@@ -23,19 +23,19 @@ message = """From: {sender}
 To: {receivers}
 Subject: Monitor Service Notification
 
-You are being notified that {SITE} is experiencing a {status} status!
+You are being notified that {site} is experiencing a {status} status!
 """
 
 
-def main(SITE, email_time):
-    resp = requests.get(SITE)
+def main(site, last_email_time):
+    resp = requests.get(site)
     if resp.status_code == 200:
         print "\b" + GREEN + "." + END,
         sys.stdout.flush()
     else:
         # Print colored status message to terminal
         print "\n({}) {} {}STATUS: {}{}".format(strftime("%a %b %d %Y %H:%M:%S"),
-                                                SITE,
+                                                site,
                                                 YELLOW,
                                                 resp.status_code,
                                                 END
@@ -43,12 +43,12 @@ def main(SITE, email_time):
         # Log status message to log file
         log = io.open('monitor.log', mode='a')
         log.write("({}) {} STATUS: {}\n".format(strftime("%a %b %d %Y %H:%M:%S"),
-                                                SITE,
+                                                site,
                                                 resp.status_code,
                                                 )
                   )
         # If more than EMAIL_INTERVAL seconds since last email, resend
-        if (time() - email_time[SITE]) > EMAIL_INTERVAL:
+        if (time() - last_email_time[site]) > EMAIL_INTERVAL:
             try:
                 smtpObj = smtplib.SMTP(host, port)  # Set up SMTP object
                 smtpObj.starttls()
@@ -57,11 +57,11 @@ def main(SITE, email_time):
                                  receivers,
                                  message.format(sender=sender,
                                                 receivers=", ".join(receivers),
-                                                SITE=SITE,
+                                                site=site,
                                                 status=resp.status_code
                                                 )
                                  )
-                email_time[SITE] = time()  # Update time of last email
+                last_email_time[site] = time()  # Update time of last email
                 print GREEN + "Successfully sent email" + END
             except smtplib.SMTPException:
                 print RED + "Error sending email ({}:{})".format(host, port) + END
@@ -69,7 +69,7 @@ def main(SITE, email_time):
 
 if __name__ == '__main__':
     SITES = sys.argv[1:]  # Accept sites from command line input
-    email_time = {}  # Monitored sites and timestamp of last alert sent
+    last_email_time = {}  # Monitored sites and timestamp of last alert sent
 
     # Read in additional sites to monitor from sites.txt file
     try:
@@ -78,21 +78,21 @@ if __name__ == '__main__':
         print RED + "No sites.txt file found" + END
 
     # Add protocol if missing in URL
-    for SITE in range(len(SITES)):
-        if SITES[SITE][:7] != "http://" and SITES[SITE][:8] != "https://":
-            SITES[SITE] = "http://" + SITES[SITE]
+    for site in range(len(SITES)):
+        if SITES[site][:7] != "http://" and SITES[site][:8] != "https://":
+            SITES[site] = "http://" + SITES[site]
 
     # Eliminate exact duplicates in SITES
     SITES = list(set(SITES))
 
-    for SITE in SITES:
-        print BOLD + "Beginning monitoring of {}".format(SITE) + END
-        email_time[SITE] = 0  # Initialize timestamp as 0
+    for site in SITES:
+        print BOLD + "Beginning monitoring of {}".format(site) + END
+        last_email_time[site] = 0  # Initialize timestamp as 0
 
     while SITES:
         try:
-            for SITE in SITES:
-                main(SITE, email_time)
+            for site in SITES:
+                main(site, last_email_time)
             sleep(DELAY)
         except KeyboardInterrupt:
             print RED + "\n-- Monitoring canceled --" + END

@@ -72,31 +72,38 @@ def ping(site, last_email_time):
                 print colorize("Error sending email ({}:{})".format(host, port), "red")
 
 
-def main():
-    SITES = sys.argv[1:]  # Accept sites from command line input
-    last_email_time = {}  # Monitored sites and timestamp of last alert sent
+def get_sites():
+    sites = sys.argv[1:]  # Accept sites from command line input
 
     # Read in additional sites to monitor from sites.txt file
     try:
-        SITES += [site.strip() for site in io.open('sites.txt', mode='r').readlines()]
+        sites += [site.strip() for site in io.open('sites.txt', mode='r').readlines()]
     except IOError:
         print colorize("No sites.txt file found", "red")
 
     # Add protocol if missing in URL
-    for site in range(len(SITES)):
-        if SITES[site][:7] != "http://" and SITES[site][:8] != "https://":
-            SITES[site] = "http://" + SITES[site]
+    for site in range(len(sites)):
+        if sites[site][:7] != "http://" and sites[site][:8] != "https://":
+            sites[site] = "http://" + sites[site]
 
-    # Eliminate exact duplicates in SITES
-    SITES = list(set(SITES))
+    # Eliminate exact duplicates in sites
+    sites = list(set(sites))
 
-    for site in SITES:
+    return sites
+
+
+def main():
+    last_email_time = {}  # Monitored sites and timestamp of last alert sent
+
+    sites = get_sites()
+
+    for site in sites:
         print colorize("Beginning monitoring of {}".format(site), "bold")
         last_email_time[site] = 0  # Initialize timestamp as 0
 
-    while SITES:
+    while sites:
         try:
-            for site in SITES:
+            for site in sites:
                 ping(site, last_email_time)
             sleep(DELAY)
         except KeyboardInterrupt:

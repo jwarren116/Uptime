@@ -12,11 +12,13 @@ DELAY = 60  # Delay between site queries
 EMAIL_INTERVAL = 1800  # Delay between alert emails
 
 # Define escape sequences for colored terminal output
-GREEN = "\033[92m"
-RED = "\033[91m"
-YELLOW = "\033[93m"
-BOLD = "\033[1m"
-END = "\033[0m"
+COLOR_DICT = {
+    "green": "\033[92m",
+    "red": "\033[91m",
+    "yellow": "\033[93m",
+    "bold": "\033[1m",
+    "end": "\033[0m",
+    }
 
 # Message template for alert
 message = """From: {sender}
@@ -27,19 +29,22 @@ You are being notified that {site} is experiencing a {status} status!
 """
 
 
-def main(site, last_email_time):
+def colorize(text, color):
+    # print COLOR_DICT
+    return COLOR_DICT[color] + str(text) + COLOR_DICT['end']
+
+
+def ping(site, last_email_time):
     resp = requests.get(site)
     if resp.status_code == 200:
-        print "\b" + GREEN + "." + END,
+        print "\b" + colorize(".", "green"),
         sys.stdout.flush()
     else:
         # Print colored status message to terminal
-        print "\n({}) {} {}STATUS: {}{}".format(strftime("%a %b %d %Y %H:%M:%S"),
-                                                site,
-                                                YELLOW,
-                                                resp.status_code,
-                                                END
-                                                )
+        print "\n({}) {} STATUS: {}".format(strftime("%a %b %d %Y %H:%M:%S"),
+                                            site,
+                                            colorize(resp.status_code, "yellow"),
+                                            )
         # Log status message to log file
         log = io.open('monitor.log', mode='a')
         log.write("({}) {} STATUS: {}\n".format(strftime("%a %b %d %Y %H:%M:%S"),
@@ -62,12 +67,12 @@ def main(site, last_email_time):
                                                 )
                                  )
                 last_email_time[site] = time()  # Update time of last email
-                print GREEN + "Successfully sent email" + END
+                print colorize("Successfully sent email", "green")
             except smtplib.SMTPException:
-                print RED + "Error sending email ({}:{})".format(host, port) + END
+                print colorize("Error sending email ({}:{})".format(host, port), "red")
 
 
-if __name__ == '__main__':
+def main():
     SITES = sys.argv[1:]  # Accept sites from command line input
     last_email_time = {}  # Monitored sites and timestamp of last alert sent
 
@@ -75,7 +80,7 @@ if __name__ == '__main__':
     try:
         SITES += [site.strip() for site in io.open('sites.txt', mode='r').readlines()]
     except IOError:
-        print RED + "No sites.txt file found" + END
+        print colorize("No sites.txt file found", "red")
 
     # Add protocol if missing in URL
     for site in range(len(SITES)):
@@ -86,16 +91,20 @@ if __name__ == '__main__':
     SITES = list(set(SITES))
 
     for site in SITES:
-        print BOLD + "Beginning monitoring of {}".format(site) + END
+        print colorize("Beginning monitoring of {}".format(site), "bold")
         last_email_time[site] = 0  # Initialize timestamp as 0
 
     while SITES:
         try:
             for site in SITES:
-                main(site, last_email_time)
+                ping(site, last_email_time)
             sleep(DELAY)
         except KeyboardInterrupt:
-            print RED + "\n-- Monitoring canceled --" + END
+            print colorize("\n-- Monitoring canceled --", "red")
             break
     else:
-        print YELLOW + "No site(s) input to monitor!" + END
+        print colorize("No site(s) input to monitor!", "red")
+
+
+if __name__ == '__main__':
+    main()

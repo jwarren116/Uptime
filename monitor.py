@@ -30,6 +30,7 @@ You are being notified that {site} is experiencing a {status} status!
 
 
 def colorize(text, color):
+    """Return input text wrapped in ANSI color codes for input color."""
     return COLOR_DICT[color] + str(text) + COLOR_DICT['end']
 
 
@@ -72,6 +73,7 @@ def ping(site, last_email_time):
 
 
 def get_sites():
+    """Return list of unique URLs from input and sites.txt file."""
     sites = sys.argv[1:]  # Accept sites from command line input
 
     # Read in additional sites to monitor from sites.txt file

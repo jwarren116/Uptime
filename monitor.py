@@ -37,6 +37,7 @@ def colorize(text, color):
 
 
 def error_log(site, status_code):
+    """Log errors to stdout and log file, and send alert email via SMTP."""
     # Print colored status message to terminal
     print "\n({}) {} STATUS: {}".format(strftime("%a %b %d %Y %H:%M:%S"),
                                         site,
@@ -70,6 +71,12 @@ def error_log(site, status_code):
 
 
 def ping(site):
+    """Send GET request to input site
+
+    A 200 response status results in a green '.' printed to stdout
+    A non-200 response status results in a call to error_log(), passing site
+    and the response status
+    """
     resp = requests.get(site)
     if resp.status_code == 200:
         print "\b" + colorize(".", "green"),

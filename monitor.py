@@ -30,7 +30,6 @@ You are being notified that {site} is experiencing a {status} status!
 
 
 def colorize(text, color):
-    # print COLOR_DICT
     return COLOR_DICT[color] + str(text) + COLOR_DICT['end']
 
 

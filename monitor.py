@@ -21,7 +21,7 @@ COLOR_DICT = {
     }
 
 # Message template for alert
-message = """From: {sender}
+MESSAGE = """From: {sender}
 To: {receivers}
 Subject: Monitor Service Notification
 
@@ -60,7 +60,7 @@ def ping(site, last_email_time):
                 smtpObj.login(sender, password)
                 smtpObj.sendmail(sender,
                                  receivers,
-                                 message.format(sender=sender,
+                                 MESSAGE.format(sender=sender,
                                                 receivers=", ".join(receivers),
                                                 site=site,
                                                 status=resp.status_code

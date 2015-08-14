@@ -46,12 +46,12 @@ def ping(site, last_email_time):
                                             colorize(resp.status_code, "yellow"),
                                             )
         # Log status message to log file
-        log = io.open('monitor.log', mode='a')
-        log.write("({}) {} STATUS: {}\n".format(strftime("%a %b %d %Y %H:%M:%S"),
-                                                site,
-                                                resp.status_code,
-                                                )
-                  )
+        with open('monitor.log', 'a') as log:
+            log.write("({}) {} STATUS: {}\n".format(strftime("%a %b %d %Y %H:%M:%S"),
+                                                    site,
+                                                    resp.status_code,
+                                                    )
+                      )
         # If more than EMAIL_INTERVAL seconds since last email, resend
         if (time() - last_email_time[site]) > EMAIL_INTERVAL:
             try:

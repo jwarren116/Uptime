@@ -71,18 +71,9 @@ def error_log(site, status_code):
 
 
 def ping(site):
-    """Send GET request to input site
-
-    A 200 response status results in a green '.' printed to stdout
-    A non-200 response status results in a call to error_log(), passing site
-    and the response status
-    """
+    """Send GET request to input site and return status code"""
     resp = requests.get(site)
-    if resp.status_code == 200:
-        print "\b" + colorize(".", "green"),
-        sys.stdout.flush()
-    else:
-        error_log(site, resp.status_code)
+    return resp.status_code
 
 
 def get_sites():
@@ -116,7 +107,12 @@ def main():
     while sites:
         try:
             for site in sites:
-                ping(site)
+                status = ping(site)
+                if status == 200:
+                    print "\b" + colorize(".", "green"),
+                    sys.stdout.flush()
+                else:
+                    error_log(site, status)
             sleep(DELAY)
         except KeyboardInterrupt:
             print colorize("\n-- Monitoring canceled --", "red")

@@ -36,21 +36,24 @@ def colorize(text, color):
     return COLOR_DICT[color] + str(text) + COLOR_DICT['end']
 
 
-def error_log(site, status_code):
+def error_log(site, status):
     """Log errors to stdout and log file, and send alert email via SMTP."""
     # Print colored status message to terminal
     print "\n({}) {} STATUS: {}".format(strftime("%a %b %d %Y %H:%M:%S"),
                                         site,
-                                        colorize(status_code, "yellow"),
+                                        colorize(status, "yellow"),
                                         )
     # Log status message to log file
     with open('monitor.log', 'a') as log:
         log.write("({}) {} STATUS: {}\n".format(strftime("%a %b %d %Y %H:%M:%S"),
                                                 site,
-                                                status_code,
+                                                status,
                                                 )
                   )
-    # If more than EMAIL_INTERVAL seconds since last email, resend
+
+
+def send_alert(site, status):
+    """If more than EMAIL_INTERVAL seconds since last email, resend email"""
     if (time() - last_email_time[site]) > EMAIL_INTERVAL:
         try:
             smtpObj = smtplib.SMTP(host, port)  # Set up SMTP object
@@ -61,7 +64,7 @@ def error_log(site, status_code):
                              MESSAGE.format(sender=sender,
                                             receivers=", ".join(receivers),
                                             site=site,
-                                            status=status_code
+                                            status=status
                                             )
                              )
             last_email_time[site] = time()  # Update time of last email
@@ -113,6 +116,7 @@ def main():
                     sys.stdout.flush()
                 else:
                     error_log(site, status)
+                    send_alert(site, status)
             sleep(DELAY)
         except KeyboardInterrupt:
             print colorize("\n-- Monitoring canceled --", "red")

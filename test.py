@@ -17,7 +17,6 @@ def test_colorize():
 
 
 def test_error_log(capsys):
-    last_email_time["http://www.example.com"] = 0
     error_log("http://www.example.com", 404)
     log = [site.strip() for site in io.open('monitor.log', mode='r').readlines()]
     out, err = capsys.readouterr()

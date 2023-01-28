@@ -1,6 +1,4 @@
-http://thawing-caverns-7149.herokuapp.com/
 http://www.jwarren.co/somefakesite
-http://www.ezpy.co
 https://leiweibau.net
 https://n-tv.de
 https://ip-wonderland.com

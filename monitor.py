@@ -39,10 +39,10 @@ def colorize(text, color):
 def error_log(site, status):
     """Log errors to stdout and log file, and send alert email via SMTP."""
     # Print colored status message to terminal
-    print "\n({}) {} STATUS: {}".format(strftime("%a %b %d %Y %H:%M:%S"),
+    print("\n({}) {} STATUS: {}".format(strftime("%a %b %d %Y %H:%M:%S"),
                                         site,
                                         colorize(status, "yellow"),
-                                        )
+                                        ))
     # Log status message to log file
     with open('monitor.log', 'a') as log:
         log.write("({}) {} STATUS: {}\n".format(strftime("%a %b %d %Y %H:%M:%S"),
@@ -68,15 +68,18 @@ def send_alert(site, status):
                                             )
                              )
             last_email_time[site] = time()  # Update time of last email
-            print colorize("Successfully sent email", "green")
+            print(colorize("Successfully sent email", "green"))
         except smtplib.SMTPException:
-            print colorize("Error sending email ({}:{})".format(host, port), "red")
+            print(colorize("Error sending email ({}:{})".format(host, port), "red"))
 
 
 def ping(site):
     """Send GET request to input site and return status code"""
-    resp = requests.get(site)
-    return resp.status_code
+    try:
+        resp = requests.get(site)
+        return resp.status_code
+    except:
+        return 503
 
 
 def get_sites():
@@ -87,7 +90,7 @@ def get_sites():
     try:
         sites += [site.strip() for site in io.open('sites.txt', mode='r').readlines()]
     except IOError:
-        print colorize("No sites.txt file found", "red")
+        print(colorize("No sites.txt file found", "red"))
 
     # Add protocol if missing in URL
     for site in range(len(sites)):
@@ -104,7 +107,7 @@ def main():
     sites = get_sites()
 
     for site in sites:
-        print colorize("Beginning monitoring of {}".format(site), "bold")
+        print(colorize("Beginning monitoring of {}".format(site), "bold"))
         last_email_time[site] = 0  # Initialize timestamp as 0
 
     while sites:
@@ -112,17 +115,19 @@ def main():
             for site in sites:
                 status = ping(site)
                 if status == 200:
-                    print "\b" + colorize(".", "green"),
+                    print("\n" + site + " ... " + colorize("OK", "green")),
                     sys.stdout.flush()
                 else:
                     error_log(site, status)
-                    send_alert(site, status)
+                    #send_alert(site, status)
             sleep(DELAY)
+        # except requests.exceptions.ConnectionError:
+        #     print(colorize("No Connection ({})".format(site), "red"))
         except KeyboardInterrupt:
-            print colorize("\n-- Monitoring canceled --", "red")
+            print(colorize("\n-- Monitoring canceled --", "red"))
             break
     else:
-        print colorize("No site(s) input to monitor!", "red")
+        print(colorize("No site(s) input to monitor!", "red"))
 
 
 if __name__ == '__main__':
